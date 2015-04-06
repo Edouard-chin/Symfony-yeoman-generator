@@ -1,10 +1,19 @@
 {
-  "name": "package",
-  "version": "0.0.0",
+  "name": "<%= projectName %>",
+  "version": "0.0.1",
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
   "dependencies": {
   	<% if (includeBootstrap) { %> "bootstrap": "3.3.4", <% } %>
   	<% if (includeFontAwesome) { %> "font-awesome": "4.3.0", <% } %>
-  	<% if (includeModernizr) { %> "modernizr": "2.8.3" <% } %>
+  	<% if (includeModernizr) { %> "modernizr": "2.8.3", <% } %>
+  	<% if (includeDataTables) { %> "datatables": "1.10.6", <% } %>
+  	<% if (includeDataTables) { %> "datatables-bootstrap3": "", <% } %>
+    "jquery": "1.11.2"
   }
 }
 

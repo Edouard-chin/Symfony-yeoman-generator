@@ -3,6 +3,7 @@ var yeoman = require('yeoman-generator');
 var chalk = require('chalk');
 var yosay = require('yosay');
 var exec = require('child_process').exec;
+var path = require('path');
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
@@ -72,6 +73,11 @@ module.exports = yeoman.generators.Base.extend({
                         name: 'Modernizr',
                         value: 'modernizr',
                         checked: true,
+                    },
+                    {
+                        name: 'DataTables',
+                        value: 'datatables',
+                        checked: false,
                     }
                 ]
             }];
@@ -84,6 +90,7 @@ module.exports = yeoman.generators.Base.extend({
                 this.includeBootstrap = hasDependency('bootstrap');
                 this.includeFontAwesome = hasDependency('font-awesome');
                 this.includeModernizr = hasDependency('modernizr');
+                this.includeDataTables = hasDependency('datatables');
                 done();
             }.bind(this));
         }
@@ -92,26 +99,40 @@ module.exports = yeoman.generators.Base.extend({
         symfonyInstall: function () {
             var self = this;
             this.on('symfonyFinishDownload', function () {
-                this.spawnCommand('php', ['symfony.phar', 'new', this.projectName, this.symfonyVersion]);
+                this.spawnCommand('php', ['symfony.phar', 'new', this.projectName, this.symfonyVersion]).on('close', self.async());
             })
         },
-        download: function () {
-            var self = this;
+        downloadSymfony: function () {
             var done = this.async();
-            exec('php -r "readfile(\'https://getcomposer.org/installer\');" | php');
             exec('php -r "readfile(\'http://symfony.com/installer\');" > symfony.phar', [], function () {
                 done();
             });
         },
-        app: function () {
-            this.template('_package.json', 'package.json');
-            this.template('_bower.json', 'bower.json');
-            this.template('bowerrc', '.bowerrc');
+        downloadComposer: function () {
+            var done = this.async();
+            exec('php -r "readfile(\'https://getcomposer.org/installer\');" | php', [], function () {
+                done();
+            });
         }
     },
-    install: function () {
-        this.installDependencies({
-            skipInstall: this.options['skip-install']
-        });
+    install: {
+        createSymfonyProject: function () {
+            this.async();
+            this.emit('symfonyFinishDownload');
+        },
+
+        createFiles: function () {
+            this.template('_package.json', this.projectName + '/package.json');
+            this.template('_bower.json', this.projectName + '/bower.json');
+            this.template('bowerrc', this.projectName + '/.bowerrc');
+        },
+
+        installDependencies: function () {
+            var dir = path.join(process.cwd(), this.projectName);
+            process.chdir(dir);
+            this.installDependencies({
+                skipInstall: this.options['skip-install']
+            });
+        }
     }
 });
