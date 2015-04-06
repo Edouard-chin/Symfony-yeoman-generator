@@ -1,6 +1,10 @@
 {
   "name": "package",
   "version": "0.0.0",
-  "dependencies": {}
+  "dependencies": {
+  	<% if (includeBootstrap) { %> "bootstrap": "3.3.4", <% } %>
+  	<% if (includeFontAwesome) { %> "font-awesome": "4.3.0", <% } %>
+  	<% if (includeModernizr) { %> "modernizr": "2.8.3" <% } %>
+  }
 }
 

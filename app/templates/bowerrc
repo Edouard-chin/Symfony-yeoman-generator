@@ -1,0 +1,4 @@
+{
+	"directory": "<%= bowerDirectory %>",
+	"json": "bower.json"
+}
