@@ -4,6 +4,7 @@ var chalk = require('chalk');
 var yosay = require('yosay');
 var exec = require('child_process').exec;
 var path = require('path');
+var fs = require('fs');
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
@@ -61,6 +62,57 @@ module.exports = yeoman.generators.Base.extend({
                 this.symfonyVersion = props.symfonyVersion;
                 this.projectName = props.projectName;
                 this.bowerDirectory = props.bowerDirectory;
+                done();
+            }.bind(this));
+        },
+
+        symfonyBundle: function () {
+            var done = this.async();
+            var options = [
+                {
+                    type: 'checkbox',
+                    name: 'bundles',
+                    message: 'Which bundle would you like to add ?',
+                    choices: [
+                        {
+                            name: 'Doctrine fixtures Bundles',
+                            value: 'doctrine-fixture-bundle',
+                            checked: true
+                        },
+                        {
+                            name: 'The UPro FileBundle',
+                            value: 'upro-file-bundle',
+                            checked: false
+                        },
+                        {
+                            name: 'FOS JS Routing Bundle',
+                            value: 'fos-js-routing-bundle',
+                            checked: true
+                        },
+                        {
+                            name: 'Fos User Bundle',
+                            value: 'fos-user-bundle',
+                            checked: true
+                        },
+                        {
+                            name: 'Faker library',
+                            value: 'fzaninotto-faker',
+                            checker: false
+                        }
+                    ]
+                }
+            ];
+
+            this.prompt(options, function (answers) {
+                var bundles = answers.bundles;
+                function hasBundle(bundle) {
+                    return bundle && bundles.indexOf(bundle) !== -1;
+                }
+                this.addDoctrineFixtureBundle = hasBundle('doctrine-fixture-bundle');
+                this.addUProFileBundle = hasBundle('upro-file-bundle');
+                this.addFosRoutingBundle = hasBundle('fos-js-routing-bundle');
+                this.addFosUserBundle = hasBundle('fos-user-bundle');
+                this.addFakerLibrary = hasBundle('fzaninotto-faker');
                 done();
             }.bind(this));
         },
@@ -129,24 +181,31 @@ module.exports = yeoman.generators.Base.extend({
         }
     },
     install: {
-        createSymfonyProject: function () {
-            this.async();
-            this.emit('symfonyFinishDownload');
-        },
+        // createSymfonyProject: function () {
+        //     this.async();
+        //     this.emit('symfonyFinishDownload');
+        // },
 
-        createFiles: function () {
-            this.template('_package.json', this.projectName + '/package.json');
-            this.template('_bower.json', this.projectName + '/bower.json');
-            this.template('bowerrc', this.projectName + '/.bowerrc');
-            this.template('Gruntfile.js', this.projectName + '/Gruntfile.js');
-        },
+        // createFiles: function () {
+        //     this.template('_package.json', this.projectName + '/package.json');
+        //     this.template('_bower.json', this.projectName + '/bower.json');
+        //     this.template('bowerrc', this.projectName + '/.bowerrc');
+        //     this.template('Gruntfile.js', this.projectName + '/Gruntfile.js');
+        // },
 
-        installDependencies: function () {
+        // installFrontDependencies: function () {
+        //     var dir = path.join(process.cwd(), this.projectName);
+        //     process.chdir(dir);
+        //     this.installDependencies({
+        //         skipInstall: this.options['skip-install']
+        //     });
+        // },
+
+        installBundles: function () {
             var dir = path.join(process.cwd(), this.projectName);
             process.chdir(dir);
-            this.installDependencies({
-                skipInstall: this.options['skip-install']
-            });
+            fs.rename('../composer.phar', 'composer.phar');
+            fs.rename('../symfony.phar', 'symfony.phar');
         }
     }
 });
