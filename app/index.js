@@ -181,31 +181,64 @@ module.exports = yeoman.generators.Base.extend({
         }
     },
     install: {
-        // createSymfonyProject: function () {
-        //     this.async();
-        //     this.emit('symfonyFinishDownload');
-        // },
+        createSymfonyProject: function () {
+            this.async();
+            this.emit('symfonyFinishDownload');
+        },
 
-        // createFiles: function () {
-        //     this.template('_package.json', this.projectName + '/package.json');
-        //     this.template('_bower.json', this.projectName + '/bower.json');
-        //     this.template('bowerrc', this.projectName + '/.bowerrc');
-        //     this.template('Gruntfile.js', this.projectName + '/Gruntfile.js');
-        // },
-
-        // installFrontDependencies: function () {
-        //     var dir = path.join(process.cwd(), this.projectName);
-        //     process.chdir(dir);
-        //     this.installDependencies({
-        //         skipInstall: this.options['skip-install']
-        //     });
-        // },
+        createFiles: function () {
+            this.template('_package.json', this.projectName + '/package.json');
+            this.template('_bower.json', this.projectName + '/bower.json');
+            this.template('bowerrc', this.projectName + '/.bowerrc');
+            this.template('Gruntfile.js', this.projectName + '/Gruntfile.js');
+        },
 
         installBundles: function () {
             var dir = path.join(process.cwd(), this.projectName);
             process.chdir(dir);
+            var done = this.async();
             fs.rename('../composer.phar', 'composer.phar');
             fs.rename('../symfony.phar', 'symfony.phar');
+            if (this.addDoctrineFixtureBundle) {
+                this.spawnCommand('php', ['composer.phar', 'require', 'doctrine/doctrine-fixtures-bundle', '--no-update']);
+            }
+            if (this.addUProFileBundle) {
+                var composer = this.readFileAsString('composer.json');
+                var data = JSON.parse(composer);
+                data['require']['upro/file-bundle'] = 'dev-master';
+                data['repositories'] = [];
+                data['repositories'].push({'type': 'vcs', 'url': 'git@github.com:upro/UProFileBundle.git'});
+                composer = JSON.stringify(data, null, 4);
+                fs.writeFileSync('composer.json', composer);
+            }
+            if (this.addFosRoutingBundle) {
+                this.spawnCommand('php', ['composer.phar', 'require', 'friendsofsymfony/jsrouting-bundle', '--no-update']);
+            }
+            if (this.addFosUserBundle) {
+                this.spawnCommand('php', ['composer.phar', 'require', 'friendsofsymfony/user-bundle:~2.0@dev', '--no-update']);
+            }
+            if (this.addFakerLibrary) {
+                this.spawnCommand('php', ['composer.phar', 'require', 'fzaninotto/faker', '--no-update']);
+            }
+            done();
+        },
+
+        composerInstall: function () {
+            var done = this.async();
+            this.spawnCommand('rm', ['composer.lock']);
+            this.spawnCommand('php', ['composer.phar', 'install']).on('close', done);
+        },
+
+        postInstallCmd: function () {
+            var done = this.async();
+            this.spawnCommand('rm', ['app/config/parameters.yml']);
+            this.spawnCommand('php', ['composer.phar', 'run-script', 'post-install-cmd']).on('close', done);
+        },
+
+        installFrontDependencies: function () {
+            this.installDependencies({
+                skipInstall: this.options['skip-install']
+            });
         }
     }
 });
